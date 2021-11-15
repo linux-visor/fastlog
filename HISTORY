@@ -1,0 +1,100 @@
+FastLog 开发日志
+
+=====================================
+
+> 作者： 荣涛
+> 时间：2021年6月 - 
+
+
+# 编码历史
+
+* 2021年7月12日
+	* 将 bitmask 移至 src, 并保留 decoder 中的源文件
+
+* 2021年7月5日
+	* 日期生成 bug 解决
+	* 默认使用 `-D_FASTLOG_USE_EVENTFD=0` 编译选项
+
+* 2021年7月1日 (中国共产党建党100周年)
+	* 将 FastLog 和 FastQ 结合，发现会严重影响 FastQ 的时延
+		通知机制 FastLog
+			FastQ: 1000ns - 3000ns
+			FastQ+FastLog: 300000ns
+		轮询机制 FastLog
+			FastQ: 1000ns - 3000ns	(基本无影响)
+			FastQ+FastLog: 30000ns
+
+* 2021年6月30日
+	* decoder: 添加进度条(支持 txt,xml,json 格式), 如下：
+		fastlog.metadata    [##################################################] 100%
+		++ parse meta file done.
+		fastlog.log         [##################################################] 100%
+		++ parse log file done.
+		log9.txt            [##################################################] 100%
+	* 添加文件头字段`struct fastlog_file_header`->`data_num`,记录元数据和日志数据数量
+	* 输出映射文件名(需要自定义,若同文件夹运行多个程序，可以设定不同的文件名)，见`fastlog_init()`
+	* 后台线程模式`enum FASTLOG_MODE`
+	* 字节序需要吗？当然！添加`struct fastlog_file_header->endian`
+
+* 2021年6月29日
+	* decoder: 扩展统计cli=> `stats level|name|func|thread`
+	* 添加后台线程绑核功能(fastlog_init(...)的 cpu 参数, -1不绑核)
+	* test: modules (多模块多线程测试例) 2021年6月29日14:09:11
+	* Benchmark 基准测试/吞吐量测试
+
+* 2021年6月28日
+	* 实现通知机制(eventfd+epoll/select/poll),见宏`_FASTLOG_USE_EVENTFD`代码分支；
+		通过测试，显示使用通知机制，将大幅降低吞吐量。
+		这里是不是可以使用限制CPU方案；
+	* 调整代码目录结构，为了消除 epoll_wait EINTR
+	* 后台线程的轮询机制占用 CPU 非常严重，引入通知机制(eventfd+epoll/select/poll)思想。
+		但对吞吐量会有一定影响。 TODO
+	* decoder: `parse_logdata`中日志映射越界检测。
+	* decoder: 添加`stats`命令行
+	* 基准测试，见`test_benchmark()`
+	* "-Waddress-of-packed-member" GCC 版本编译告警
+* 2021年6月25日
+	* decoder: json 输出 的支持(1): 框架 2021年6月25日11:48:30
+	* decoder: json 输出 的支持(2): 完成 2021年6月25日15:47:43
+	* decoder: 搜索的子字符串查找`log_search_list__iter3()`
+	* 日志的级别激活与去激活,见`fastlog_level()`和`__curr_level`
+	* decoder: 将`2021年6月23日`编码应用于命令行和CLI
+				因为 getopt 参数支持多重过滤，所以不将其应用于 getopt 命令行
+				我现在决定 getopt 和 CLI 都先不使用`2021年6月23日`开发的功能
+
+* 2021年6月23日
+	* decoder: 函数名，文件名，线程名的红黑树(红黑树节点中包含日志链表)
+				用于提高查询效率,见`log_search_list__iter2()`
+				TODO: 将此功能应用于 `getopt_long` 和 `search`命令行
+	* decoder: 上述修改的释放过程，见`release_and_exit()`中的`log_search_rbtree__destroyall`调用
+* 2021年6月22日
+	* decoder: output 添加 元数据 输出
+	* decoder: `level`命令改为`log`
+	* decoder: 新的命令行`meta`
+	* decoder: 新的命令行`search`, 2021年6月22日13:25:39(完成)
+	* 第一次文档评审结束 2021年6月22日16:23:19
+	* decoder: 日志文件个数和大小限制(初始化阶段`fastlog_init()`)
+	* 整体软件目录结构以及 CMakeLists.txt 2021年6月22日18:15:27
+* 2021年6月21日
+	* decoder: `show level`改为`level show`
+	* decoder: 统计命令行
+	* decoder: filter 过滤器
+	* decoder: `level show`命令改为`level`
+* 2021年6月18日
+	* decoder: load log [file name] 命令行
+	* decoder: xml 支持
+* 2021年6月17日
+	* decoder: show level 命令行
+	* decoder: getopt 命令行参数
+	* decoder: 添加 `ls` 命令(system("ls"))
+* 2021年6月16日 
+	* decoder reprintf: 恢复字符串的输出。
+	* txt 的输出
+	* linenoise 新建
+* 2021年6月11日 decoder timestamp
+* 2021年6月10日 解析命令 数据结构设计
+* 2021年6月9日 添加 日志 解析 main() 程序
+* 2021年6月8日 添加 stagingBuffer 功能，移植自 NanoLog
+* 2021年6月3日 rdtsc部分；log_id获取；
+* 2021年5月21日    创建源码文件
+
